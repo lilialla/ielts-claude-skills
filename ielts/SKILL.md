@@ -45,10 +45,12 @@ metadata:
 子目录：
 - `02_模考记录/` ← `/ielts-mock` 写入
 - `03_写作批改/` ← `/ielts-writing` 写入
-- `04_周复盘/` ← `/ielts-week-review`（Phase 2）写入
-- `05_词汇笔记/` ← `/ielts-vocab`（Phase 3）写入
+- `04_听力精听/` ← `/ielts-listening` 写入
+- `04_周复盘/` ← `/ielts-plan`（周复盘归档模式）写入
+- `05_词汇笔记/` ← `/ielts-vocab` 写入（synonyms.md / topics/{slug}.md / review-log.md）
 - `06_口语素材/` ← `/ielts-speaking` 用户手动整理
-- 根级 3 个台账：`03_开放问题台账.md` / `05_决策记录.md` / `06_AI工作摘要.md`
+- `07_工具与资源/题库索引.md` ← `/ielts-question-bank` 维护
+- 根级 4 个台账：`00_备考计划_总纲.md`（`/ielts-plan` 维护）/ `03_开放问题台账.md` / `05_决策记录.md` / `06_AI工作摘要.md`
 
 ---
 
@@ -73,11 +75,15 @@ metadata:
 | 用户说什么（关键词） | 直接路由到 |
 |---|---|
 | 「批改 / 改作文 / 看作文 / 审题 / 写作」+ 提供作文文本 | `/ielts-writing` |
-| 「模考 / 我的模考分 / 录分 / 剑 X 我做了 / 模考成绩」 | `/ielts-mock` |
-| 「进度 / 现在到哪了 / 还有多久 / status / 我的状态 / 总览 / 趋势」 | `/ielts-status` |
+| 「听力 / 这道听力为什么错 / 听力错题 / 精听 / 同替没听出」 | `/ielts-listening` |
 | 「阅读 / 这道为什么错 / 同义替换 / T/F/NG」 | `/ielts-reading` |
 | 「口语 / Part 2 / 万能故事 / 话题分组」 | `/ielts-speaking` |
-| 「周复盘 / 上周怎么样」 | 暂未实现，提示 Phase 2 计划 |
+| 「模考 / 我的模考分 / 录分 / 剑 X 我做了 / 模考成绩」 | `/ielts-mock` |
+| 「进度 / 现在到哪了 / 还有多久 / status / 我的状态 / 总览 / 趋势 / 错题本」 | `/ielts-status` |
+| 「单词 / 同替入库 / 词汇 / 复习 / 词块 / 主题词」 | `/ielts-vocab` |
+| 「题库 / 我做过哪些套 / 没做过的 / 剑 X 进度」 | `/ielts-question-bank` |
+| 「本周任务 / 计划怎么调 / 考试改期 / 在轨道上吗 / 按这速度能到吗」 | `/ielts-plan` |
+| 「周复盘 / 上周怎么样」 | `/ielts-plan`（周复盘归档模式） |
 | 上述都不匹配 → 进 Step 1 摸底 | |
 
 **关键规则**：用户**已经在对话上下文里**提供了具体材料（一篇作文、一组模考分），不要再走摸底流程，直接路由。
@@ -90,20 +96,28 @@ metadata:
 2. **「你现在大概什么水平？做过模考吗？如果做过，四科分别多少？」**
 3. **「你今天想做什么？」**（给选项）
    - A. 我要练写作
-   - B. 我要练阅读
-   - C. 我要准备口语素材
-   - D. 我要录入模考成绩
-   - E. 我要看进度报告
+   - B. 我要练听力
+   - C. 我要练阅读
+   - D. 我要准备口语素材
+   - E. 我要录入模考成绩
+   - F. 我要看进度报告 / 错题本
+   - G. 我要记单词 / 复习词汇
+   - H. 我要查题库 / 记做题进度
+   - I. 我要看本周任务 / 调整计划
 
 ### Step 2：路由
 
 | 用户选择 | 路由到 |
 |---|---|
 | A | `/ielts-writing` |
-| B | `/ielts-reading` |
-| C | `/ielts-speaking` |
-| D | `/ielts-mock` |
-| E | `/ielts-status` |
+| B | `/ielts-listening` |
+| C | `/ielts-reading` |
+| D | `/ielts-speaking` |
+| E | `/ielts-mock` |
+| F | `/ielts-status` |
+| G | `/ielts-vocab` |
+| H | `/ielts-question-bank` |
+| I | `/ielts-plan` |
 
 ---
 

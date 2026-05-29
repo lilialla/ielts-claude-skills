@@ -25,8 +25,12 @@ metadata:
 读取来源：
 - `02_模考记录/*.md`（frontmatter `type: mock-exam`）
 - `03_写作批改/*.md`（frontmatter `type: writing-batch`）
+- `04_听力精听/*.md`（frontmatter `type: listening-batch`）
 - `04_周复盘/*.md`（frontmatter `type: week-review`）（Phase 2 才有）
+- `05_词汇笔记/*.md`（frontmatter `type: vocab-entry` 或 vocab 累积文件）
+- `07_工具与资源/题库索引.md`（题库做过情况）
 - `00_备考计划_总纲.md` 第一节读考试日期
+- `03_开放问题台账.md`（open_verifications 全量汇总）
 
 ---
 
@@ -56,8 +60,11 @@ metadata:
 
 ```bash
 CLOUD="/Users/neillai/Library/CloudStorage/GoogleDrive-victorbyyyv@gmail.com/我的云端硬盘/英语学习"
-ls "$CLOUD/03_写作批改/" 2>/dev/null | grep -E '\.md$' | wc -l   # 写作篇数
-ls "$CLOUD/02_模考记录/" 2>/dev/null | grep -E '\.md$' | wc -l   # 模考次数
+ls "$CLOUD/03_写作批改/" 2>/dev/null | grep -E '\.md$' | wc -l    # 写作篇数
+ls "$CLOUD/02_模考记录/" 2>/dev/null | grep -E '\.md$' | wc -l    # 模考次数
+ls "$CLOUD/04_听力精听/" 2>/dev/null | grep -E '\.md$' | wc -l    # 听力精听套数
+ls "$CLOUD/05_词汇笔记/" 2>/dev/null | grep -E '\.md$' | wc -l    # 词汇文件数
+[ -f "$CLOUD/07_工具与资源/题库索引.md" ] && echo 1 || echo 0    # 题库索引是否在
 ```
 
 ### Step 3：聚合写作批改（核心）
@@ -85,6 +92,26 @@ ls "$CLOUD/02_模考记录/" 2>/dev/null | grep -E '\.md$' | wc -l   # 模考次
 | open_verifications 总数 | sum(len(open_verifications) for each file) |
 | 错误 tag top 10 | flat all errors[].tag → 计数排序取前 10 |
 | 趋势（近 5 篇 vs 前 5 篇）| Opus overall 均值之差 |
+
+### Step 3.5：聚合听力错题（新增）
+
+对 `04_听力精听/*.md` 每个文件抽取：
+
+- `date` / `source_book` / `test_id` / `section`
+- `correct_count` / `total_questions`
+- `errors[].tag`
+- `synonyms_extracted`（长度）
+
+聚合：
+
+| 维度 | 计算 |
+|---|---|
+| 总套数 | n = 文件数 |
+| 整套覆盖 vs 单 Section | 按 section 字段分桶 |
+| 听力平均正确率 | sum(correct/total) / n |
+| 错误 tag top 10 | flat all errors[].tag → 计数 |
+| 同替累积条数 | sum(synonyms_extracted.length) |
+| 趋势（近 5 套 vs 前 5 套）| 平均正确率之差 |
 
 ### Step 4：聚合模考记录
 
@@ -136,13 +163,26 @@ T1: {n1} 篇 / T2: {n2} 篇
 历次趋势：{L: x→x→x, R: ..., W: ..., S: ...}
 距目标 7.5 差距：{x.x}
 
-## 错误标签 Top 10（来自 03_写作批改/*.md 聚合）
+## 听力进度（`/ielts-listening` 累计 {p} 套）
 
-| 排名 | tag | 出现篇数 | 出现总次数 |
-|---|---|---|---|
-| 1 | linker-overuse | 4 | 12 |
-| 2 | article-missing | 3 | 9 |
-| ... | | | |
+最近一套：{date} · {book} {test_id} S{section} · {correct}/{total}（正确率 {x}%）
+累计同替条数：{synonyms_count}（候选入 `/ielts-vocab`）
+听力错误 tag top 5：
+| 排名 | tag | 出现次数 |
+|---|---|---|
+| 1 | synonym-missed | {n} |
+| 2 | number-mishear | {n} |
+| ... | | |
+
+source: model_inference
+
+## 错误标签 Top 10（写作 + 听力合并聚合）
+
+| 排名 | tag | 维度 | 出现篇数 | 出现总次数 |
+|---|---|---|---|---|
+| 1 | linker-overuse | writing | 4 | 12 |
+| 2 | synonym-missed | listening | 3 | 8 |
+| ... | | | | |
 
 source: model_inference（AI 标注，未经真人/真考确认）
 
@@ -165,7 +205,54 @@ source: open_verification（必须真人/真考裁定才能 close）
 source: model_inference
 ```
 
-### Step 6：是否归档
+### Step 6（新增）：错题本视图模式
+
+如果用户的请求是「翻一下 {tag} 错题」「我 article-missing 都错在哪」「错题本 {tag}」等，**不出全局报告**，进入错题本视图：
+
+```bash
+CLOUD="/Users/neillai/Library/CloudStorage/GoogleDrive-victorbyyyv@gmail.com/我的云端硬盘/英语学习"
+TAG="$1"   # 用户指定的 tag
+
+# 找含该 tag 的所有写作 + 听力文件
+echo "=== 写作中的 $TAG ==="
+grep -lE "tag:\s*$TAG\b" "$CLOUD/03_写作批改/"*.md 2>/dev/null
+echo "=== 听力中的 $TAG ==="
+grep -lE "tag:\s*$TAG\b" "$CLOUD/04_听力精听/"*.md 2>/dev/null
+```
+
+对每个命中文件：
+1. 提取文件名（含日期）
+2. 从正文里抽出该 tag 标注的句子 / 题号上下文
+3. 按时间倒序列出
+
+输出格式：
+
+```markdown
+# 错题本 · `{tag}`
+
+累计出现 {n} 次，分布在 {k} 个文件。
+
+## {YYYY-MM-DD} · {filename}
+
+> "{原句 or 录音原文}"
+> 错因：{当时 AI 给的诊断}
+> confirmed: {true | false}
+
+（按时间倒序，最近的在最上）
+
+---
+
+## 模式总结（基于本 tag 全部样本）
+
+{一句话总结：这个错误你犯了 N 次，其中 X 次是同样的原因…}
+
+source: model_inference
+```
+
+> 用户复习用：直接对着这份视图练同类题型。
+> 如果用户说「这条已经搞懂了，标 confirmed」，按约束 5 先告知改哪个文件再改 `confirmed: true`。
+
+### Step 7：是否归档
 
 输出报告后**主动问用户**：
 
@@ -185,10 +272,10 @@ source: model_inference
 ```bash
 CLOUD="/Users/neillai/Library/CloudStorage/GoogleDrive-victorbyyyv@gmail.com/我的云端硬盘/英语学习"
 
-# 提取所有 tag 并计数 top 10（用 find 处理空目录）
-find "$CLOUD/03_写作批改" -name "*.md" -type f 2>/dev/null \
-  | xargs grep -hE "^\s*-\s*\{tag:\s*" 2>/dev/null \
-  | sed -E 's/.*tag:\s*([a-z-]+).*/\1/' \
+# 提取所有 tag 并计数 top 10（写作 + 听力合并）
+find "$CLOUD/03_写作批改" "$CLOUD/04_听力精听" -name "*.md" -type f 2>/dev/null \
+  | xargs grep -hE "^\s*-\s*\{(q:\s*[0-9]+,\s*)?tag:\s*" 2>/dev/null \
+  | sed -E 's/.*tag:[[:space:]]*([a-z-]+).*/\1/' \
   | sort | uniq -c | sort -rn | head -10
 ```
 
