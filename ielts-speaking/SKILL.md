@@ -4,7 +4,25 @@ description: |
   雅思口语素材工厂。话题分组 + 万能故事生成 + Part 3 追问预测 + 高分表达。
   触发方式：/ielts-speaking、「口语素材」「话题分组」「万能故事」「Part 2 准备」
 metadata:
-  version: 1.0.0
+  version: 2.0.0-fork
+  fork_from: YANZHANLIN/ielts-claude-skills@v1.0
+---
+
+# IELTS Speaking — 雅思口语素材工厂（自建增强版）
+
+## AI 行为约束（不可违反）
+
+1. **不擅自升级 personal note 为持久化事实**——生成的素材默认只在对话内呈现；用户说「存到 `06_口语素材/`」才写文件。
+2. **不基于单次批改宣称用户水平**——本 skill 不评分（评分让豆包 / italki tutor 做），所以单次素材生成本身不涉及评分宣称；但若用户问「我说这段大概几分」，必须拒绝并指向真人 reviewer 或 italki ex-examiner。
+3. **数字结论必带 source 字段**——本 skill 通常不输出分数；如必要，标 `source: model_inference`。
+4. **AI 分歧必须显式列入 open_verifications**——若用户挑战某个表达「这个英美人真这么说吗」，承认这是 `open_verification`，建议用 italki tutor 确认。
+5. **修改持久化文件前显式确认**——本 skill 默认不写文件；用户授权写 `06_口语素材/` 时，append-only 即可，不修改已有素材。
+
+## 云盘路径配置
+
+**根目录**：`/Users/neillai/Library/CloudStorage/GoogleDrive-victorbyyyv@gmail.com/我的云端硬盘/英语学习/`
+本 skill Phase 1 不主动写入；用户显式说「存到口语素材」时写 `06_口语素材/{topic-slug}.md`（append-only）。
+
 ---
 
 # IELTS Speaking — 雅思口语素材工厂
